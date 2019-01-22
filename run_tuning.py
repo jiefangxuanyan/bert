@@ -21,16 +21,18 @@ from __future__ import print_function
 import collections
 import csv
 import functools
+import json
 import os
 import tempfile
+
+import tensorflow as tf
+from bayes_opt import BayesianOptimization
+from bayes_opt.event import Events
+from bayes_opt.observer import JSONLogger
 
 import modeling
 import optimization
 import tokenization
-import tensorflow as tf
-from bayes_opt import BayesianOptimization
-from bayes_opt.observer import JSONLogger
-from bayes_opt.event import Events
 
 flags = tf.flags
 
@@ -688,7 +690,9 @@ def main(_):
     logger = JSONLogger(path=os.path.join(output_dirs_path, "logs.json"))
     optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 
-    optimizer.maximize(init_points=4, n_iter=10)
+    optimizer.maximize(init_points=4, n_iter=20)
+    with open(os.path.join(output_dirs_path, "best.json"), "w", encoding="utf-8") as fo_best:
+        json.dump(optimizer.max, fo_best, ensure_ascii=False)
 
 
 def tuned_function(bert_config, label_list, output_dirs_path, tokenizer, train_examples, eval_examples, tuning_metric,
