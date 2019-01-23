@@ -18,6 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import functools
+
 import tensorflow as tf
 from flask import Flask, request, Response
 
@@ -58,7 +60,7 @@ def online_input_fn_builder(iterator, seq_length, is_training, drop_remainder):
         """The actual input function."""
         batch_size = params["batch_size"]
 
-        d = tf.data.Dataset.from_generator(generate_from_iterator, output_types={
+        d = tf.data.Dataset.from_generator(functools.partial(generate_from_iterator, iterator), output_types={
             "input_ids": tf.int32,
             "input_mask": tf.int32,
             "segment_ids": tf.int32,
@@ -68,7 +70,7 @@ def online_input_fn_builder(iterator, seq_length, is_training, drop_remainder):
             "input_mask": [seq_length],
             "segment_ids": [seq_length],
             "label_id": [seq_length]
-        }, args=(iterator,))
+        })
 
         if is_training:
             d = d.repeat()
