@@ -568,7 +568,7 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
         else:
             output_spec = tf.contrib.tpu.TPUEstimatorSpec(
                 mode=mode,
-                predictions={"probabilities": probabilities},
+                predictions={"probabilities": probabilities, "difficulty": logits[:, 1] - logits[:, 0]},
                 scaffold_fn=scaffold_fn)
         return output_spec
 
@@ -823,6 +823,15 @@ def main(_):
                     str(class_probability)
                     for class_probability in probabilities) + "\n"
                 writer.write(output_line)
+                num_written_lines += 1
+        output_difficulty_file = os.path.join(FLAGS.output_dir, "test_difficulty.tsv")
+        with tf.gfile.GFile(output_difficulty_file, "w") as writer:
+            num_written_lines = 0
+            for (i, prediction) in enumerate(result):
+                difficulty = prediction["difficulty"]
+                if i >= num_actual_predict_examples:
+                    break
+                writer.write(str(difficulty) + "\n")
                 num_written_lines += 1
         assert num_written_lines == num_actual_predict_examples
 
