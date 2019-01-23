@@ -691,7 +691,7 @@ def main(_):
     logger = JSONLogger(path=os.path.join(output_dirs_path, "logs_2.json"))
     optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 
-    load_logs(optimizer, logs=["logs.json"])
+    load_logs(optimizer, logs=[os.path.join(output_dirs_path, "logs.json")])
     optimizer.maximize(init_points=0, n_iter=20)
     with open(os.path.join(output_dirs_path, "best_2.json"), "w", encoding="utf-8") as fo_best:
         json.dump(optimizer.max, fo_best, ensure_ascii=False)
