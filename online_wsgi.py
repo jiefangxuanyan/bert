@@ -146,7 +146,7 @@ def init_wsgi():
     def handler():
         text = request.get_data(cache=False, as_text=True)
         example = InputExample(guid="%s-%s" % ("test", example_id[0]), text_a=text, label="full")
-        feature = convert_single_example(example_id, example, label_list,
+        feature = convert_single_example(example_id[0], example, label_list,
                                          app.config["MAX_SEQ_LENGTH"], tokenizer)
         stored_iterator.value = feature
         prediction = next(result_iterator)
