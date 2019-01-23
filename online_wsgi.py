@@ -34,42 +34,42 @@ if not app.config.from_envvar("BERT_FLASK_SETTINGS"):
 def init_wsgi():
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    tokenization.validate_case_matches_checkpoint(app.config["do_lower_case"],
-                                                  app.config["init_checkpoint"])
+    tokenization.validate_case_matches_checkpoint(app.config["DO_LOWER_CASE"],
+                                                  APP.CONFIG["INIT_CHECKPOINT"])
 
-    bert_config = modeling.BertConfig.from_json_file(app.config["bert_config_file"])
+    bert_config = modeling.BertConfig.from_json_file(app.config["BERT_CONFIG_FILE"])
 
-    if app.config["max_seq_length"] > bert_config.max_position_embeddings:
+    if app.config["MAX_SEQ_LENGTH"] > bert_config.max_position_embeddings:
         raise ValueError(
             "Cannot use sequence length %d because the BERT model "
             "was only trained up to sequence length %d" %
-            (app.config["max_seq_length"], bert_config.max_position_embeddings))
+            (app.config["MAX_SEQ_LENGTH"], bert_config.max_position_embeddings))
 
-    tf.gfile.MakeDirs(app.config["output_dir"])
+    tf.gfile.MakeDirs(app.config["OUTPUT_DIR"])
 
     processor = WikiJoinProcessor()
 
     label_list = processor.get_labels()
 
     tokenizer = tokenization.FullTokenizer(
-        vocab_file=app.config["vocab_file"], do_lower_case=app.config["do_lower_case"])
+        vocab_file=app.config["VOCAB_FILE"], do_lower_case=app.config["DO_LOWER_CASE"])
 
     is_per_host = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
     run_config = tf.contrib.tpu.RunConfig(
         cluster=None,
         master=None,
-        model_dir=app.config["output_dir"],
-        save_checkpoints_steps=app.config["save_checkpoints_steps"],
+        model_dir=app.config["OUTPUT_DIR"],
+        save_checkpoints_steps=app.config["SAVE_CHECKPOINTS_STEPS"],
         tpu_config=tf.contrib.tpu.TPUConfig(
-            iterations_per_loop=app.config["iterations_per_loop"],
-            num_shards=app.config["num_tpu_cores"],
+            iterations_per_loop=app.config["ITERATIONS_PER_LOOP"],
+            num_shards=app.config["NUM_TPU_CORES"],
             per_host_input_for_training=is_per_host))
 
     model_fn = model_fn_builder(
         bert_config=bert_config,
         num_labels=len(label_list),
-        init_checkpoint=app.config["init_checkpoint"],
-        learning_rate=app.config["learning_rate"],
+        init_checkpoint=app.config["INIT_CHECKPOINT"],
+        learning_rate=app.config["LEARNING_RATE"],
         num_train_steps=None,
         num_warmup_steps=None,
         use_tpu=False,
@@ -91,9 +91,9 @@ def init_wsgi():
     def handler():
         text = request.get_data(cache=False, as_text=True)
         example = InputExample(guid="%s-%s" % ("test", example_id[0]), text_a=text, label="full")
-        features = convert_examples_to_features([example], label_list, app.config["max_seq_length"],
+        features = convert_examples_to_features([example], label_list, app.config["MAX_SEQ_LENGTH"],
                                                 tokenizer)
-        input_fn = input_fn_builder(features, app.config["max_seq_length"], False, False)
+        input_fn = input_fn_builder(features, app.config["MAX_SEQ_LENGTH"], False, False)
         result = estimator.predict(input_fn=input_fn)
         prediction, = result
         difficulty = prediction["difficulty"]
