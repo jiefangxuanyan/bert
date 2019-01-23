@@ -676,7 +676,7 @@ def main(_):
 
     tf.gfile.MakeDirs(output_dirs_path)
 
-    pbounds = {"learning_rate": (1e-5, 6e-5), "num_train_epochs": (2, 5)}
+    pbounds = {"learning_rate": (1e-5, 6e-5), "num_train_epochs": (1, 5)}
 
     partial_function = functools.partial(tuned_function, bert_config=bert_config, label_list=label_list,
                                          output_dirs_path=output_dirs_path, tokenizer=tokenizer,
