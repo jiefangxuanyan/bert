@@ -69,7 +69,7 @@ def online_input_fn_builder(iterator, seq_length, is_training, drop_remainder):
             "input_ids": [seq_length],
             "input_mask": [seq_length],
             "segment_ids": [seq_length],
-            "label_ids": [seq_length]
+            "label_ids": []
         })
 
         if is_training:
