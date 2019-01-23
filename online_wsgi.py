@@ -87,7 +87,7 @@ def init_wsgi():
 
     example_id = [5]
 
-    @app.route("/", methods=["post"])
+    @app.route("/eval", methods=["post"])
     def handler():
         text = request.get_data(cache=False, as_text=True)
         example = InputExample(guid="%s-%s" % ("test", example_id[0]), text_a=text, label="full")
