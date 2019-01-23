@@ -812,26 +812,21 @@ def main(_):
         result = estimator.predict(input_fn=predict_input_fn)
 
         output_predict_file = os.path.join(FLAGS.output_dir, "test_results.tsv")
-        with tf.gfile.GFile(output_predict_file, "w") as writer:
+        output_difficulty_file = os.path.join(FLAGS.output_dir, "test_difficulty.tsv")
+        with tf.gfile.GFile(output_predict_file, "w") as writer, \
+                tf.gfile.GFile(output_difficulty_file, "w") as difficulty_writer:
             num_written_lines = 0
             tf.logging.info("***** Predict results *****")
             for (i, prediction) in enumerate(result):
                 probabilities = prediction["probabilities"]
+                difficulty = prediction["difficulty"]
                 if i >= num_actual_predict_examples:
                     break
                 output_line = "\t".join(
                     str(class_probability)
                     for class_probability in probabilities) + "\n"
                 writer.write(output_line)
-                num_written_lines += 1
-        output_difficulty_file = os.path.join(FLAGS.output_dir, "test_difficulty.tsv")
-        with tf.gfile.GFile(output_difficulty_file, "w") as writer:
-            num_written_lines = 0
-            for (i, prediction) in enumerate(result):
-                difficulty = prediction["difficulty"]
-                if i >= num_actual_predict_examples:
-                    break
-                writer.write(str(difficulty) + "\n")
+                difficulty_writer.write(str(difficulty) + "\n")
                 num_written_lines += 1
         assert num_written_lines == num_actual_predict_examples
 
