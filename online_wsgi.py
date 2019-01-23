@@ -24,11 +24,60 @@ from flask import Flask, request, Response
 import modeling
 import tokenization
 from run_wikijoin import (WikiJoinProcessor, model_fn_builder, InputExample, convert_examples_to_features,
-                          input_fn_builder)
+                          input_fn_builder, convert_single_example)
 
 app = Flask(__name__)
 if not app.config.from_envvar("BERT_FLASK_SETTINGS"):
     raise RuntimeError
+
+
+class StoredIterator:
+    value = None
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self.value
+
+
+def generate_from_iterator(iterator):
+    for feature in iterator:
+        yield {
+            "input_ids": feature.input_ids,
+            "input_mask": feature.input_mask,
+            "segment_ids": feature.segment_ids,
+            "label_id": feature.label_id
+        }
+
+
+def online_input_fn_builder(iterator, seq_length, is_training, drop_remainder):
+    """Creates an `input_fn` closure to be passed to TPUEstimator."""
+
+    def input_fn(params):
+        """The actual input function."""
+        batch_size = params["batch_size"]
+
+        d = tf.data.Dataset.from_generator(generate_from_iterator, output_types={
+            "input_ids": tf.int32,
+            "input_mask": tf.int32,
+            "segment_ids": tf.int32,
+            "label_id": tf.int32
+        }, output_shapes={
+            "input_ids": [seq_length],
+            "input_mask": [seq_length],
+            "segment_ids": [seq_length],
+            "label_id": [seq_length]
+        }, args=(iterator,))
+
+        if is_training:
+            d = d.repeat()
+            d = d.shuffle(buffer_size=100)
+
+        d = d.batch(batch_size=batch_size, drop_remainder=drop_remainder)
+        return d
+
+    return input_fn
 
 
 def init_wsgi():
@@ -87,15 +136,20 @@ def init_wsgi():
 
     example_id = [5]
 
+    stored_iterator = StoredIterator()
+
+    input_fn = online_input_fn_builder(stored_iterator, app.config["MAX_SEQ_LENGTH"], False, False)
+    result = estimator.predict(input_fn=input_fn)
+    result_iterator = iter(result)
+
     @app.route("/eval", methods=["post"])
     def handler():
         text = request.get_data(cache=False, as_text=True)
         example = InputExample(guid="%s-%s" % ("test", example_id[0]), text_a=text, label="full")
-        features = convert_examples_to_features([example], label_list, app.config["MAX_SEQ_LENGTH"],
-                                                tokenizer)
-        input_fn = input_fn_builder(features, app.config["MAX_SEQ_LENGTH"], False, False)
-        result = estimator.predict(input_fn=input_fn)
-        prediction, = result
+        feature = convert_single_example(example_id, example, label_list,
+                                         app.config["MAX_SEQ_LENGTH"], tokenizer)
+        stored_iterator.value = feature
+        prediction = next(result_iterator)
         difficulty = prediction["difficulty"]
         example_id[0] += 1
         return Response(str(difficulty), mimetype="text/plain")
