@@ -27,7 +27,8 @@ from run_wikijoin import (WikiJoinProcessor, model_fn_builder, InputExample, con
                           input_fn_builder)
 
 app = Flask(__name__)
-app.config.from_envvar("BERT_FLASK_SETTINGS")
+if not app.config.from_envvar("BERT_FLASK_SETTINGS"):
+    raise RuntimeError
 
 
 def init_wsgi():
