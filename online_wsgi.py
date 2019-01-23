@@ -35,7 +35,7 @@ def init_wsgi():
     tf.logging.set_verbosity(tf.logging.INFO)
 
     tokenization.validate_case_matches_checkpoint(app.config["DO_LOWER_CASE"],
-                                                  APP.CONFIG["INIT_CHECKPOINT"])
+                                                  app.config["INIT_CHECKPOINT"])
 
     bert_config = modeling.BertConfig.from_json_file(app.config["BERT_CONFIG_FILE"])
 
