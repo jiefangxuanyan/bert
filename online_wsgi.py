@@ -49,7 +49,7 @@ def generate_from_iterator(iterator):
             "input_ids": feature.input_ids,
             "input_mask": feature.input_mask,
             "segment_ids": feature.segment_ids,
-            "label_id": feature.label_id
+            "label_ids": feature.label_id
         }
 
 
@@ -64,12 +64,12 @@ def online_input_fn_builder(iterator, seq_length, is_training, drop_remainder):
             "input_ids": tf.int32,
             "input_mask": tf.int32,
             "segment_ids": tf.int32,
-            "label_id": tf.int32
+            "label_ids": tf.int32
         }, output_shapes={
             "input_ids": [seq_length],
             "input_mask": [seq_length],
             "segment_ids": [seq_length],
-            "label_id": [seq_length]
+            "label_ids": [seq_length]
         })
 
         if is_training:
