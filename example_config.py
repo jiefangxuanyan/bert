@@ -1,0 +1,10 @@
+do_lower_case = False
+init_checkpoint = ""
+bert_config_file = ""
+max_seq_length = 128
+vocab_file = ""
+output_dir = ""
+save_checkpoints_steps = 1000
+iterations_per_loop = 1000
+num_tpu_cores = 8
+learning_rate = 5e-5
