@@ -29,6 +29,7 @@ import tensorflow as tf
 from bayes_opt import BayesianOptimization
 from bayes_opt.event import Events
 from bayes_opt.observer import JSONLogger
+from bayes_opt.util import load_logs
 
 import modeling
 import optimization
@@ -687,11 +688,12 @@ def main(_):
         pbounds=pbounds,
         random_state=0,
     )
-    logger = JSONLogger(path=os.path.join(output_dirs_path, "logs.json"))
+    logger = JSONLogger(path=os.path.join(output_dirs_path, "logs_2.json"))
     optimizer.subscribe(Events.OPTMIZATION_STEP, logger)
 
-    optimizer.maximize(init_points=4, n_iter=20)
-    with open(os.path.join(output_dirs_path, "best.json"), "w", encoding="utf-8") as fo_best:
+    load_logs(optimizer, logs=["logs.json"])
+    optimizer.maximize(init_points=0, n_iter=20)
+    with open(os.path.join(output_dirs_path, "best_2.json"), "w", encoding="utf-8") as fo_best:
         json.dump(optimizer.max, fo_best, ensure_ascii=False)
 
 
